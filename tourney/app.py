@@ -21,8 +21,9 @@ class Match(db.Model):
 
 @app.route('/')
 def index():
-    players = Player.query.all()
-    return render_template('bracket.html', players=players)
+    # players = Player.query.all()
+    # return render_template('bracket.html', players=players)
+    return render_template('play.html')
 
 # Create a tournament and generate initial matches
 @app.route('/create_tournament', methods=['POST'])
