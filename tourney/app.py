@@ -1,82 +1,85 @@
-from flask import Flask, render_template, redirect, request, url_for
-from flask_sqlalchemy import SQLAlchemy
-import math
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+import requests
+import time
+import urllib
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tournament.db'
-db = SQLAlchemy(app)
+app.secret_key = 'abc123'
 
-# Model for Player
-class Player(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
-
-# Model for Match
-class Match(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    player1_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)
-    player2_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)
-    winner_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)
-    round_number = db.Column(db.Integer, nullable=False)
-
-@app.route('/')
-def index():
-    # players = Player.query.all()
-    # return render_template('bracket.html', players=players)
-    return render_template('play.html')
-
-# Create a tournament and generate initial matches
-@app.route('/create_tournament', methods=['POST'])
-def create_tournament():
-    players = Player.query.all()
-    num_players = len(players)
-    num_rounds = math.ceil(math.log2(num_players))
+@app.route("/", methods=["GET", "POST"])
+def scryfall_query():
     
-    # Pair up players for the first round
-    matches = []
-    for i in range(0, num_players, 2):
-        player1 = players[i]
-        player2 = players[i+1] if i+1 < num_players else None  # Handle bye rounds
-        match = Match(player1_id=player1.id, player2_id=player2.id if player2 else None, round_number=1)
-        matches.append(match)
+    # Define the base URL for Scryfall's API
+    base_url = 'https://api.scryfall.com/cards/search'
     
-    db.session.add_all(matches)
-    db.session.commit()
-    
-    return redirect(url_for('view_bracket'))
+    if request.method == "POST":
+        query = request.form.get("query")
+        
+        # Define the query
+        #query = '%28plains+OR+island+OR+swamp+OR+mountain+OR+forest+OR+wastes%29+t%3Abasic+t%3Aland&unique=art&as=grid&order=name'  # URL-encoded query
+        query = urllib.parse.quote_plus(query)
+        options = request.form.get('options')
+        print(f'{query}&unique={options}')
 
-# View bracket
-@app.route('/bracket')
-def view_bracket():
-    matches = Match.query.order_by(Match.round_number).all()
-    return render_template('bracket.html', matches=matches)
+        # Make the request
+        response = requests.get(f'{base_url}?q={query}&unique={options}')
 
-# Report a winner
-@app.route('/report_winner/<int:match_id>', methods=['POST'])
-def report_winner(match_id):
-    match = Match.query.get(match_id)
-    winner_id = request.form['winner_id']
-    match.winner_id = winner_id
-    
-    db.session.commit()
-    
-    # Handle progression to the next round
-    next_round = match.round_number + 1
-    # Find or create the next round match for the winner
-    return redirect(url_for('view_bracket'))
+        # Check if the request was successful
+        if response.status_code == 200:
+            print("SUCCESSFUL QUERY")
+            data = response.json()
+            print(data["object"], data["total_cards"], data["has_more"])
+            # Process the data (for example, print card names)
+            while data['has_more'] == True:
+                response = requests.get(data['next_page'])
+                data = response.json()
+                print(data["object"], data["total_cards"], data["has_more"])
+                time.sleep(0.1)
+        else:
+            print(f'Error: {response.status_code}')
+            #Error Handling
+            return render_template("scryfall_search.html")
+        return redirect(url_for("tournament"))
+    return render_template("scryfall_search.html")
 
-# Add a new player to the tournament
-@app.route('/add_player', methods=['POST'])
-def add_player():
-    player_name = request.form['name']
-    new_player = Player(name=player_name)
-    db.session.add(new_player)
-    db.session.commit()
-    return redirect(url_for('index'))
+@app.route("/tournament", methods=["GET", "POST"])
+def tournament():
+    if request.method == "POST":
+        # Check which button was clicked by examining the form data
+        if request.form.get("BACK"):
+            print("BACK button clicked")
+            # Process the "BACK" button click here
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
+        elif request.form.get("EVYN"):
+            print("EVYN BUTTON clicked")
+            # Process the "EVYN" click here
+
+        elif request.form.get("card"):
+            # Handle image buttons by checking the request form data
+            print(f"{request.form.get("card")} button clicked")
+
+        elif request.form.get("RESET"):
+            #cleanup tasks
+            print("RESETTING TOURNAMENT")
+            return redirect(url_for("scryfall_query"))
+        
+        else:
+            print("unknown POST")
+
+        return redirect(url_for("tournament"))  # Redirect to avoid resubmission
+
+    return render_template("play.html")  # Render your HTML template
+
+class Tournament:
+    def __init__():
+        pass
+
+    def record_winner():
+        pass
+
+    def undo_round():
+        pass
+
+
+if __name__ == "__main__":
     app.run(debug=True)
-
-    app.add_player()
