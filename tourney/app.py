@@ -29,18 +29,27 @@ def scryfall_query():
             print("SUCCESSFUL QUERY")
             data = response.json()
             print(data["object"], data["total_cards"], data["has_more"])
+            
+            entrants = data["total_cards"]
+
             # Process the data (for example, print card names)
             while data['has_more'] == True:
                 response = requests.get(data['next_page'])
                 data = response.json()
+                for card in data['data']:
+                    try:
+                        print(card['image_uris']['large'])
+                    except:
+                        continue
                 print(data["object"], data["total_cards"], data["has_more"])
-                time.sleep(0.1)
+                time.sleep(0.1) #so scryfall doesn't yell at me (i would cry)
         else:
             print(f'Error: {response.status_code}')
             #Error Handling
             return render_template("scryfall_search.html")
 
         return redirect(url_for("tournament"))
+
     return render_template("scryfall_search.html")
 
 @app.route("/tournament", methods=["GET", "POST"])
@@ -73,11 +82,14 @@ def tournament():
 
     kinkadian = session.get('kinkadian', 0)
 
-    return render_template("play.html", kinkadian=kinkadian)  # Render your HTML template
+    return render_template("play.html", kinkadian=kinkadian, card1=card1, card2=card2)  # Render your HTML template
 
-class Tournament:
-    def __init__():
-        pass
+class SingleElimTournament:
+    def __init__(entrants=[]):
+        self.player_list = entrants
+
+    def get_next_match():
+        return card1, card2
 
     def record_winner():
         pass
