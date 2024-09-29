@@ -39,6 +39,7 @@ def scryfall_query():
             print(f'Error: {response.status_code}')
             #Error Handling
             return render_template("scryfall_search.html")
+
         return redirect(url_for("tournament"))
     return render_template("scryfall_search.html")
 
@@ -52,6 +53,7 @@ def tournament():
 
         elif request.form.get("EVYN"):
             print("EVYN BUTTON clicked")
+            session['kinkadian'] = session.get('kinkadian', 0) + 1
             # Process the "EVYN" click here
 
         elif request.form.get("card"):
@@ -61,6 +63,7 @@ def tournament():
         elif request.form.get("RESET"):
             #cleanup tasks
             print("RESETTING TOURNAMENT")
+            session.clear()
             return redirect(url_for("scryfall_query"))
         
         else:
@@ -68,7 +71,9 @@ def tournament():
 
         return redirect(url_for("tournament"))  # Redirect to avoid resubmission
 
-    return render_template("play.html")  # Render your HTML template
+    kinkadian = session.get('kinkadian', 0)
+
+    return render_template("play.html", kinkadian=kinkadian)  # Render your HTML template
 
 class Tournament:
     def __init__():
