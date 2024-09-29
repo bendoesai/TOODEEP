@@ -45,6 +45,8 @@ def scryfall_query():
 
 @app.route("/tournament", methods=["GET", "POST"])
 def tournament():
+    card1image = "https://cards.scryfall.io/large/front/4/e/4e11ea8a-f895-438d-a3b7-f070238e4161.jpg?1717013111"
+    card2image =  "https://cards.scryfall.io/large/front/1/b/1b499b37-efaf-4484-95e8-a70a9778c804.jpg?1726286908"
     if request.method == "POST":
         # Check which button was clicked by examining the form data
         if request.form.get("BACK"):
@@ -73,7 +75,7 @@ def tournament():
 
     kinkadian = session.get('kinkadian', 0)
 
-    return render_template("play.html", kinkadian=kinkadian)  # Render your HTML template
+    return render_template("play.html", kinkadian=kinkadian, card1image=card2image, card1image=card2image)  # Render your HTML template
 
 class Tournament:
     def __init__():
