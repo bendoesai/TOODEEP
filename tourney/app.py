@@ -1,51 +1,51 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+import random
 import requests
 import time
 import urllib
+
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 
 app = Flask(__name__)
 app.secret_key = 'abc123'
 
 @app.route("/", methods=["GET", "POST"])
 def scryfall_query():
-    
-    # Define the base URL for Scryfall's API
     base_url = 'https://api.scryfall.com/cards/search'
-    
+
     if request.method == "POST":
         query = request.form.get("query")
-        
-        # Define the query
-        #query = '%28plains+OR+island+OR+swamp+OR+mountain+OR+forest+OR+wastes%29+t%3Abasic+t%3Aland&unique=art&as=grid&order=name'  # URL-encoded query
         query = urllib.parse.quote_plus(query)
         options = request.form.get('options')
-        print(f'{query}&unique={options}')
 
-        # Make the request
+        card_list = []
         response = requests.get(f'{base_url}?q={query}&unique={options}')
 
-        # Check if the request was successful
         if response.status_code == 200:
-            print("SUCCESSFUL QUERY")
             data = response.json()
-            print(data["object"], data["total_cards"], data["has_more"])
-            
-            entrants = data["total_cards"]
+            session['num_matches'] = data['total_cards']
+            print(data['total_cards'])
+            # Initial card processing
+            for card in data['data']:
+                try:
+                    card_list.append(card['image_uris']['large'])
+                except:
+                    continue
 
-            # Process the data (for example, print card names)
-            while data['has_more'] == True:
+            # Process more pages if any
+            while data['has_more']:
                 response = requests.get(data['next_page'])
                 data = response.json()
                 for card in data['data']:
                     try:
-                        print(card['image_uris']['large'])
+                        card_list.append(card['image_uris']['large'])
                     except:
                         continue
-                print(data["object"], data["total_cards"], data["has_more"])
-                time.sleep(0.1) #so scryfall doesn't yell at me (i would cry)
+                time.sleep(0.1)
+
+            random.shuffle(card_list)
+            session['bracket'] = SingleElimTournament(card_list).to_dict()
+            session['kinkadian'] = 0
         else:
-            print(f'Error: {response.status_code}')
-            #Error Handling
             return render_template("scryfall_search.html")
 
         return redirect(url_for("tournament"))
@@ -54,69 +54,106 @@ def scryfall_query():
 
 @app.route("/tournament", methods=["GET", "POST"])
 def tournament():
-    #default card image variables
-    card1image = "https://cards.scryfall.io/large/front/4/e/4e11ea8a-f895-438d-a3b7-f070238e4161.jpg?1717013111"
-    card2image =  "https://cards.scryfall.io/large/front/1/b/1b499b37-efaf-4484-95e8-a70a9778c804.jpg?1726286908"
+    bracket = SingleElimTournament.from_dict(session['bracket'])
+
     if request.method == "POST":
-        # Check which button was clicked by examining the form data
         if request.form.get("BACK"):
-            print("BACK button clicked")
-            # Process the "BACK" button click here
+            bracket.undo_round()
 
         elif request.form.get("EVYN"):
-            print("EVYN BUTTON clicked")
-            session['kinkadian'] = session.get('kinkadian', 0) + 1
-            # Process the "EVYN" click here
+            session['kinkadian'] += 1
 
         elif request.form.get("card"):
-            # Handle image buttons by checking the request form data
-            print(f"{request.form.get("card")} button clicked")
+            next_match, is_over = bracket.record_winner(request.form.get("card"))
+
+            if is_over:
+                session['bracket'] = bracket.to_dict()  # Save the updated tournament state
+                return redirect(url_for('winner'))
 
         elif request.form.get("RESET"):
-            #cleanup tasks
-            print("RESETTING TOURNAMENT")
             session.clear()
             return redirect(url_for("scryfall_query"))
         
-        else:
-            print("unknown POST")
+        session['bracket'] = bracket.to_dict()
+        return redirect(url_for("tournament"))
 
-        return redirect(url_for("tournament"))  # Redirect to avoid resubmission
+    card1image, card2image = bracket.next_match
+    if card1image is None or card2image is None:
+        return redirect(url_for('winner'))
 
-    kinkadian = session.get('kinkadian', 0)
-
-    return render_template("play.html", kinkadian=kinkadian, card1image=card1image, card2image=card2image)  # Render your HTML template
+    return render_template("play.html", kinkadian=session['kinkadian'], card1image=card1image, card2image=card2image)
 
 @app.route("/winner", methods=["GET", "POST"])
 def winner():
-    #winner image variable
-    winner = "https://cards.scryfall.io/large/front/4/e/4e11ea8a-f895-438d-a3b7-f070238e4161.jpg?1717013111"
+    winner = session['winner']
     if request.method == "POST":
         if request.form.get("RESET"):
-            #cleanup tasks
-            print("RESETTING TOURNAMENT")
             session.clear()
             return redirect(url_for("scryfall_query"))
-        
         else:
             print("unknown POST")
 
-        return redirect(url_for("winner"))  # Redirect to avoid resubmission
-    return render_template("winner.html", winner=winner)  # Render your HTML template
+        return redirect(url_for("winner"))
+
+    return render_template("winner.html", winner=winner)
 
 class SingleElimTournament:
-    def __init__(entrants=[]):
+    def __init__(self, entrants=None):
+        if entrants is None:
+            entrants = []
         self.player_list = entrants
+        self.winner_list = []
+        self.is_over = False
+        self.last_match = []
+        self.next_match = (None, None) if len(entrants) < 2 else (entrants[0], entrants[1])
 
-    def get_next_match():
-        return card1, card2
+    def record_winner(self, winner):
+        self.last_match = [self.player_list[0], self.player_list[1]]
+        if winner == 'card1':
+            self.winner_list.append(self.player_list.pop(0))
+            self.player_list.pop(0)
+        elif winner == 'card2':
+            self.winner_list.append(self.player_list.pop(1))
+            self.player_list.pop(0)
+        else:
+            print("unknown winner")
 
-    def record_winner():
-        pass
+        if len(self.player_list) == 1:
+            self.winner_list.append(self.player_list.pop(0))
 
-    def undo_round():
-        pass
+        if len(self.player_list) == 0:
+            self.player_list = self.winner_list
+            self.winner_list = []
 
+        if len(self.player_list) == 1 and len(self.winner_list) == 0:
+            self.is_over = True
+            session['winner'] = self.player_list[0]
+
+        self.next_match = (None, None) if len(self.player_list) < 2 else (self.player_list[0], self.player_list[1])
+
+        return self.next_match, self.is_over
+
+    def undo_round(self):
+        self.player_list.insert(0, self.last_match[0])
+        self.player_list.insert(1, self.last_match[1])
+        if len(self.winner_list) > 0:
+            self.winner_list.pop()
+
+    def to_dict(self):
+        return {
+            'player_list': self.player_list,
+            'winner_list': self.winner_list,
+            'is_over': self.is_over,
+            'last_match': self.last_match
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        tournament = cls(data['player_list'])
+        tournament.winner_list = data['winner_list']
+        tournament.is_over = data['is_over']
+        tournament.last_match = data['last_match']
+        return tournament
 
 if __name__ == "__main__":
     app.run(debug=True)
