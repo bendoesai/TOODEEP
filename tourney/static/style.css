@@ -1,6 +1,12 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
+
+    -webkit-transform: scale(0.80);
+    -moz-transform: scale(0.80);
+         transform: scale(0.80);
+
+    margin-top: -40px;
 }
 
 table {
@@ -12,4 +18,9 @@ table {
 th, td {
     border: 1px solid #ccc;
     padding: 10px;
+}
+
+button {
+    margin-left: 40px;
+    margin-right: 40px;
 }
