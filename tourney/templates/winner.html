@@ -5,8 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tournament Bracket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        h1 {
+            margin: 20px 0; /* Add margin for spacing */
+        }
+
+        img {
+            max-width: 90%; /* Responsive image */
+            height: auto; /* Maintain aspect ratio */
+        }
+
+        form {
+            margin: 20px 0; /* Space between elements */
+        }
+
+        button {
+            padding: 10px 20px; /* Add padding for better appearance */
+            font-size: 16px; /* Increase button text size */
+            cursor: pointer; /* Change cursor to pointer */
+        }
+    </style>
 </head>
 <body>
+    <div>
+        <h1>WINNER!!!1!!</h1>
+    </div>
     <div>
         <img src="{{ winner }}" alt="buttonpng" border="0" />
     </div>

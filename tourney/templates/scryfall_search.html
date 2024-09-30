@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Initial Screen</title>
+    <title>Scryfall Search</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div>
         <form method="POST">
-            <label for="user_input">Enter a string:</label>
+            <label for="user_input">Enter a valid Scryfall query:</label>
             <input type="text" id="query" name="query" required>
 
-            <label for="options">Uniqueness</label>
+            <label for="options">Uniqueness: </label>
             <select id="options" name="options" required>
                 <option value="" disabled selected>Select an option</option>
                 <option value="prints">All Prints</option>

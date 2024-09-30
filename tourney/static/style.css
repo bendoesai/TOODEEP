@@ -2,12 +2,21 @@ body {
     font-family: Arial, sans-serif;
     text-align: center;
     font-size: 24px;
+    margin: 0; /* Remove default margin */
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack elements vertically */
+    align-items: center; /* Center items horizontally */
+    justify-content: center; /* Center items vertically */
+    height: 100vh; /* Full height of the viewport */
+    overflow: hidden; /* Prevent overflow */
 
     -webkit-transform: scale(0.80);
     -moz-transform: scale(0.80);
          transform: scale(0.80);
 
    background-color: #00ff00;
+
+   overflow:hidden;
 }
 
 table {
@@ -25,5 +34,5 @@ button {
     margin-left: 40px;
     margin-right: 40px;
     font-size: 18px; /* Adjust the size as needed */
-    padding: 10px;   /* Optional: Add padding for better appearance */
+    padding: 5px;   /* Optional: Add padding for better appearance */
 }

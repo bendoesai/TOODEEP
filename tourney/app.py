@@ -25,7 +25,7 @@ def scryfall_query():
 
         if response.status_code == 200:
             data = response.json()
-            session['num_matches'] = data['total_cards']
+            session['total_cards'] = data['total_cards']
             print(data['total_cards'])
             # Initial card processing
             for card in data['data']:
@@ -51,6 +51,7 @@ def scryfall_query():
             random.shuffle(card_list)
             session['bracket'] = SingleElimTournament(card_list).to_dict()
             session['kinkadian'] = 0
+            session['eliminated'] = 0
         else:
             return render_template("scryfall_search.html")
 
@@ -67,6 +68,8 @@ def tournament():
 
     if request.method == "POST":
         if request.form.get("BACK"):
+            if session['eliminated'] > 0:
+                session['eliminated'] -= 1
             bracket.undo_round()
 
         elif request.form.get("EVYN"):
@@ -74,6 +77,7 @@ def tournament():
 
         elif request.form.get("card"):
             next_match, is_over = bracket.record_winner(request.form.get("card"))
+            session['eliminated'] += 1
 
             if is_over:
                 session['bracket'] = bracket.to_dict()  # Save the updated tournament state
@@ -90,7 +94,7 @@ def tournament():
     if card1image is None or card2image is None:
         return redirect(url_for('winner'))
 
-    return render_template("play.html", kinkadian=session['kinkadian'], card1image=card1image, card2image=card2image)
+    return render_template("play.html", kinkadian=session['kinkadian'], eliminated=session['eliminated'], total_cards = session['total_cards'], card1image=card1image, card2image=card2image)
 
 @app.route("/winner", methods=["GET", "POST"])
 def winner():
