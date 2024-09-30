@@ -5,26 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tournament Bracket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .button-container {
+            display: flex;
+            align-items: center; /* Align items vertically centered */
+        }
+
+        .stacked-buttons {
+            display: flex;
+            flex-direction: column; /* Stack buttons vertically */
+            margin: 0 20px; /* Add horizontal spacing */
+        }
+
+        button {
+            margin: 5px 0; /* Space between stacked buttons */
+        }
+    </style>
 </head>
 <body>
-    <div>
+    <div class="button-container">
         <form method="POST">
             <button type="submit" name="card" value="card1">
                 <img src="{{ card1image }}" alt="buttonpng" border="0" />
             </button>
+        </form>
+
+        <div class="stacked-buttons">
+            <form method="POST">
+                <button type="submit" name="BACK" value=1>BACK</button>
+            </form>
+            <form method="POST">
+                <button type="submit" name="EVYN" value=1>Kinkadian Counter: {{ kinkadian }}</button>
+            </form>
+            <form method="POST">
+                <button type="submit" name="RESET" value=1>RESTART</button>
+            </form>
+        </div>
+
+        <form method="POST">
             <button type="submit" name="card" value="card2">
                 <img src="{{ card2image }}" alt="buttonpng" border="0" />
             </button>
         </form>
     </div>
-    <form method="POST">
-        <button type="submit" name="BACK" value=1>BACK</button>
-    </form>
-    <form method="POST">
-        <button type="submit" name="EVYN" value=1>Kinkadian Counter: {{ kinkadian }}</button>
-    </form>
-    <form method="POST">
-        <button type="submit" name="RESET" value=1>RESTART</button>
-    </form>
 </body>
 </html>

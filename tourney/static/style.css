@@ -1,6 +1,7 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
+    font-size: 24px;
 
     -webkit-transform: scale(0.80);
     -moz-transform: scale(0.80);
@@ -23,4 +24,6 @@ th, td {
 button {
     margin-left: 40px;
     margin-right: 40px;
+    font-size: 18px; /* Adjust the size as needed */
+    padding: 10px;   /* Optional: Add padding for better appearance */
 }
