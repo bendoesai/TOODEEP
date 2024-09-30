@@ -4,9 +4,12 @@ import time
 import urllib
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask_session import Session
 
 app = Flask(__name__)
 app.secret_key = 'abc123'
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
 
 @app.route("/", methods=["GET", "POST"])
 def scryfall_query():
@@ -27,9 +30,11 @@ def scryfall_query():
             # Initial card processing
             for card in data['data']:
                 try:
+                    print(card['image_uris']['large'])
                     card_list.append(card['image_uris']['large'])
                 except:
                     continue
+            time.sleep(0.1)
 
             # Process more pages if any
             while data['has_more']:
@@ -37,6 +42,7 @@ def scryfall_query():
                 data = response.json()
                 for card in data['data']:
                     try:
+                        print(card['image_uris']['large'])
                         card_list.append(card['image_uris']['large'])
                     except:
                         continue
@@ -54,6 +60,9 @@ def scryfall_query():
 
 @app.route("/tournament", methods=["GET", "POST"])
 def tournament():
+    if 'bracket' not in session:
+        return redirect(url_for('scryfall_query'))
+
     bracket = SingleElimTournament.from_dict(session['bracket'])
 
     if request.method == "POST":
