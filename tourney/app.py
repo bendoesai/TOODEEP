@@ -25,7 +25,10 @@ def scryfall_query():
 
         if response.status_code == 200:
             data = response.json()
-            session['total_cards'] = data['total_cards']
+
+            byes = bin(data['total_cards'])[3:].count['1']
+            
+            session['total_cards'] = data['total_cards'] - byes
             print(data['total_cards'])
             # Initial card processing
             for card in data['data']:
@@ -167,6 +170,26 @@ class SingleElimTournament:
         tournament.is_over = data['is_over']
         tournament.last_match = data['last_match']
         return tournament
+
+    def calculate_tournament_stats(initial_players):
+        current_players = initial_players
+        auto_advances = 0
+        rounds = 0
+        
+        while current_players > 1:
+            rounds += 1
+            # If odd number of players, one will auto-advance
+            if current_players % 2 == 1:
+                auto_advances += 1
+                current_players = (current_players - 1) // 2 + 1
+            else:
+                current_players = current_players // 2
+                
+        return {
+            'total_rounds': rounds,
+            'auto_advances': auto_advances,
+            'total_eliminations': initial_players - 1
+        }
 
 if __name__ == "__main__":
     app.run(debug=True)
