@@ -26,9 +26,11 @@ def scryfall_query():
         if response.status_code == 200:
             data = response.json()
 
-            byes = bin(data['total_cards'])[3:].count['1']
+            byes = bin(data['total_cards'])[3:].count('1')
+
+            print(byes)
             
-            session['total_cards'] = data['total_cards'] - byes
+            session['total_cards'] = data['total_cards'] - byes + 1
             print(data['total_cards'])
             # Initial card processing
             for card in data['data']:
