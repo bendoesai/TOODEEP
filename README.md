@@ -13,4 +13,8 @@ flask should log something about the localhost IP it's running on while the app 
 TODO:
 - add image prerendering to make the experience a lil smoother (buffer one or two matches ahead of time)
 - make the buttons and text a bit bigger
+- round tracker
+
+Ideas for Improvement:
+- full bracket render?
 
